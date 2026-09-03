@@ -1173,7 +1173,18 @@ function repositionAllDevices() {
     const wrapperRect = wrapper.getBoundingClientRect();
     if (wrapperRect.width === 0 || wrapperRect.height === 0) return;
 
-    const currentImageAspectRatio = floorMapImage.naturalWidth / floorMapImage.naturalHeight;
+    // Measure the actual rendered image box directly instead of
+    // recomputing the object-fit:contain math ourselves. This mirrors
+    // what the edit page (floorManager.js) already does and guarantees
+    // pixel parity with whatever the platform's rendering engine
+    // actually drew, avoiding drift on engines (e.g. mobile WebViews)
+    // that may size intrinsic width:auto/height:auto slightly
+    // differently than a from-scratch reimplementation of the fit math.
+    const imageRect = floorMapImage.getBoundingClientRect();
+    if (imageRect.width === 0 || imageRect.height === 0) return;
+
+    const imageOffsetX = imageRect.left - wrapperRect.left;
+    const imageOffsetY = imageRect.top - wrapperRect.top;
 
     const deviceElements = document.querySelectorAll('#floorPlanDevices [data-x]');
     deviceElements.forEach(deviceEl => {
@@ -1181,24 +1192,8 @@ function repositionAllDevices() {
         const posY = parseFloat(deviceEl.getAttribute('data-y'));
         if (Number.isNaN(posX) || Number.isNaN(posY)) return;
 
-        let imageWidth, imageHeight;
-        if (wrapperRect.width / wrapperRect.height > currentImageAspectRatio) {
-            imageHeight = wrapperRect.height;
-            imageWidth = imageHeight * currentImageAspectRatio;
-        } else {
-            imageWidth = wrapperRect.width;
-            imageHeight = imageWidth / currentImageAspectRatio;
-        }
-
-        let displayX = (posX / 100) * imageWidth;
-        let displayY = (posY / 100) * imageHeight;
-
-        if (imageWidth < wrapperRect.width) {
-            displayX += (wrapperRect.width - imageWidth) / 2;
-        }
-        if (imageHeight < wrapperRect.height) {
-            displayY += (wrapperRect.height - imageHeight) / 2;
-        }
+        const displayX = imageOffsetX + (posX / 100) * imageRect.width;
+        const displayY = imageOffsetY + (posY / 100) * imageRect.height;
 
         deviceEl.style.transform = `translate(${displayX}px, ${displayY}px)`;
     });
