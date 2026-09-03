@@ -130,5 +130,14 @@
   },
   "0.2.4": {
     "en": "Fixes"
+  },
+  "0.2.6": {
+    "en": "Fixes"
+  },
+  "0.2.7": {
+    "en": "Bugfixes"
+  },
+  "0.2.8": {
+    "en": "Fixes se Github for log"
   }
 }
